@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Create Event | EventHub{% endblock %}
+
+{% block content %}
+<section class="create-event-page">
+    <div class="create-event-card" id="createEventCard">
+        <header class="form-header">
+            <h1>Create Event</h1>
+            <p>Fill in the details below to publish a new event.</p>
+        </header>
+
+        <form class="event-form" action="{{ url_for('organizer_bp.create_event') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="title">Event Title</label>
+                    <input type="text" id="title" name="title" required placeholder="Enter event title">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text" id="category" name="category" required placeholder="Workshop, Meetup, Conference">
+                </div>
+
+                <div class="form-group">
+                    <label for="venue">Venue</label>
+                    <input type="text" id="venue" name="venue" required placeholder="Event location">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="5" required placeholder="Describe your event"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time</label>
+                    <input type="time" id="time" name="time" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="capacity">Capacity</label>
+                    <input type="number" id="capacity" name="capacity" min="1" required placeholder="Maximum attendees">
+                </div>
+
+                <div class="form-group">
+                    <label for="registration_deadline">Registration Deadline</label>
+                    <input type="date" id="registration_deadline" name="registration_deadline" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="is_paid">Ticket Type</label>
+                    <select id="is_paid" name="is_paid" required>
+                        <option value="free" selected>Free Event</option>
+                        <option value="paid">Paid Event</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="feeGroup">
+                    <label for="fee">Fee</label>
+                    <input type="number" id="fee" name="fee" min="0" step="0.01" placeholder="Enter ticket fee">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="poster">Poster Upload</label>
+                    <input type="file" id="poster" name="poster" accept="image/*">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Create Event</button>
+                <a href="{{ url_for('organizer_bp.organizer_workspace') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+    .create-event-page {
+        width: 100%;
+        padding: 2rem 1rem 3rem;
+        display: flex;
+        justify-content: center;
+    }
+
+    .create-event-card {
+        width: min(900px, 100%);
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+    }
+
+    .form-header h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.8rem;
+    }
+
+    .form-header p {
+        margin: 0 0 1.5rem;
+        color: #666;
+    }
+
+    .event-form .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        border: 1px solid #d7dbe1;
+        border-radius: 10px;
+        padding: 0.7rem 0.85rem;
+        font: inherit;
+        background: #fff;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+    }
+
+    .form-actions {
+        margin-top: 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .form-actions .btn {
+        text-decoration: none;
+    }
+
+    @media (max-width: 720px) {
+        .create-event-card {
+            padding: 1rem;
+        }
+
+        .event-form .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        const ticketType = document.getElementById("is_paid");
+        const feeGroup = document.getElementById("feeGroup");
+        const feeInput = document.getElementById("fee");
+        const card = document.getElementById("createEventCard");
+
+        function toggleFee() {
+            const isPaid = ticketType.value === "paid";
+            feeGroup.style.display = isPaid ? "flex" : "none";
+            feeInput.required = isPaid;
+            if (!isPaid) feeInput.value = "";
+        }
+
+        ticketType.addEventListener("change", toggleFee);
+        toggleFee();
+
+        if (typeof gsap !== "undefined" && card) {
+            gsap.from(card, {
+                opacity: 0,
+                y: 24,
+                duration: 0.6,
+                ease: "power2.out"
+            });
+        }
+    })();
+</script>
+{% endblock %}

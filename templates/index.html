@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}EventHub — Discover Amazing Events{% endblock %}
+
+{% block content %}
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-badge">🎪 500+ Events Hosted</span>
+        <h1 class="hero-title">Discover, Register &<br><span class="gradient-text">Experience Events</span></h1>
+        <p class="hero-sub">From hackathons to workshops — find events that match your passion.
+            Register online, pay securely, and get your QR ticket instantly.</p>
+        <div class="hero-btns">
+            <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-compass"></i> Explore Events
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline btn-lg">
+                <i class="fa-solid fa-user-plus"></i> Join Now
+            </a>
+        </div>
+    </div>
+    <div class="hero-img">
+        <i class="fa-solid fa-calendar-days"></i>
+    </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h2 class="counter" data-target="500">0</h2>
+            <p>Events Hosted</p>
+        </div>
+        <div class="stat-card">
+            <h2 class="counter" data-target="12000">0</h2>
+            <p>Happy Participants</p>
+        </div>
+        <div class="stat-card">
+            <h2 class="counter" data-target="150">0</h2>
+            <p>Organizers</p>
+        </div>
+        <div class="stat-card">
+            <h2 class="counter" data-target="98">0</h2>
+            <p>% Satisfaction</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="features-section">
+    <h2 class="section-title">Why <span class="gradient-text">EventHub?</span></h2>
+    <p class="section-sub">Everything you need for the complete event lifecycle</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>Discover Events</h3>
+            <p>Search and filter events by category, date, and venue. Find what truly interests you.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-credit-card"></i></div>
+            <h3>Secure Payments</h3>
+            <p>Register for paid events with our safe sandbox payment gateway. Instant confirmation.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-qrcode"></i></div>
+            <h3>QR Ticketing</h3>
+            <p>Get a unique QR code for every registration. Scan and mark attendance in seconds.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-certificate"></i></div>
+            <h3>Certificates</h3>
+            <p>Download participation certificates automatically after attending events.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <h3>Live Analytics</h3>
+            <p>Organizers get real-time dashboards — registrations, revenue, and attendance.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+            <h3>Notifications</h3>
+            <p>Never miss an update — get reminders and announcements for your events.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="how-section">
+    <h2 class="section-title">How It <span class="gradient-text">Works</span></h2>
+    <div class="how-grid">
+        <div class="how-card">
+            <span class="how-num">1</span>
+            <h3>Browse & Register</h3>
+            <p>Find your event and register in under a minute.</p>
+        </div>
+        <div class="how-card">
+            <span class="how-num">2</span>
+            <h3>Pay & Get QR</h3>
+            <p>Pay securely (if paid) and receive your QR ticket.</p>
+        </div>
+        <div class="how-card">
+            <span class="how-num">3</span>
+            <h3>Attend & Enjoy</h3>
+            <p>Scan your QR at the venue, attend, and give feedback.</p>
+        </div>
+        <div class="how-card">
+            <span class="how-num">4</span>
+            <h3>Get Certified</h3>
+            <p>Download your certificate after event completion.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta-section">
+    <h2>Ready to Host Your <span class="gradient-text">Own Event?</span></h2>
+    <p>Join as an organizer and reach thousands of participants.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+        <i class="fa-solid fa-rocket"></i> Become an Organizer
+    </a>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // GSAP Hero Animations
+    gsap.from('.hero-badge', { y: 30, opacity: 0, duration: 0.8, ease: 'power3.out' });
+    gsap.from('.hero-title', { y: 50, opacity: 0, duration: 1, delay: 0.2, ease: 'power3.out' });
+    gsap.from('.hero-sub',   { y: 30, opacity: 0, duration: 0.8, delay: 0.4, ease: 'power3.out' });
+    gsap.from('.hero-btns',  { y: 30, opacity: 0, duration: 0.8, delay: 0.6, ease: 'power3.out' });
+    gsap.from('.hero-img',   { x: 60, opacity: 0, duration: 1.2, delay: 0.3, ease: 'power3.out' });
+
+    // NOTE: feature cards previously used a ScrollTrigger-based animation,
+    // but the ScrollTrigger plugin was loaded and registered in <script>
+    // tags AFTER this code ran — so `scrollTrigger:` was never valid when
+    // gsap.from() was called, and those specific cards (index 1 and 4 in
+    // the stagger, i.e. "Secure Payments" and "Live Analytics") never
+    // revealed. Replaced with a simple, immediate, non-scroll-dependent
+    // fade-in that always completes on page load.
+    gsap.from('.feature-card', {
+        y: 30, opacity: 0, duration: 0.5, stagger: 0.08, delay: 0.2, ease: 'power2.out'
+    });
+
+    // Animated counters
+    document.querySelectorAll('.counter').forEach(counter => {
+        const target = +counter.dataset.target;
+        gsap.to(counter, {
+            innerText: target, duration: 2, snap: { innerText: 1 },
+            ease: 'power2.out',
+            onUpdate: function () {
+                counter.innerText = Math.floor(counter.innerText).toLocaleString();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Participants — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .participants-page { max-width: 1100px; margin: 0 auto; padding: 120px 24px 80px; }
+    .participants-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .participants-header h1 { margin: 0; color: var(--dark); }
+    .participants-header p { color: var(--gray); margin-top: 0.3rem; }
+    .header-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .header-links a { border: 1px solid var(--light); border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.85rem; color: var(--dark); text-decoration: none; }
+    .header-links a:hover { border-color: var(--primary); color: var(--primary); }
+    .header-links a.btn-primary { color: var(--white); }
+
+    .panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th, td { text-align: left; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--light); font-size: 0.9rem; }
+    th { color: var(--gray); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .pill { display: inline-flex; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.76rem; font-weight: 600; }
+    .pill-paid { background: rgba(0,184,148,.15); color: #0f6a57; }
+    .pill-pending { background: rgba(253,203,110,.25); color: #8a6d1a; }
+    .pill-free { background: var(--light); color: var(--gray); }
+    .pill-present { background: rgba(0,206,201,.15); color: #008f8b; }
+    .pill-notmarked { background: var(--light); color: var(--gray); }
+    .empty { text-align: center; color: var(--gray); padding: 2rem 0; }
+    .count-badge {
+        display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem;
+        border-radius: 999px; background: rgba(108,92,231,.12); color: var(--primary);
+        font-size: 0.82rem; font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="participants-page">
+    <header class="participants-header">
+        <div>
+            <h1><i class="fa-solid fa-users"></i> Participants</h1>
+            <p>
+                {{ event.title if event else "Event" }}
+                {% if event and event.start_datetime %} · {{ event.start_datetime.strftime('%d %b %Y') }}{% endif %}
+                &nbsp;·&nbsp;
+                <span class="count-badge"><i class="fa-solid fa-user-group"></i> {{ participants|length if participants else 0 }} registered</span>
+            </p>
+        </div>
+        {% if event %}
+        <div class="header-links">
+            <a href="{{ url_for('organizer_bp.scan_qr', event_id=event.id) }}" class="btn btn-primary">
+                <i class="fa-solid fa-qrcode"></i> Scan Attendance
+            </a>
+            <a href="{{ url_for('organizer_bp.edit_event', event_id=event.id) }}"><i class="fa-solid fa-arrow-left"></i> Back to Event</a>
+        </div>
+        {% endif %}
+    </header>
+
+    <section class="panel">
+        {% if participants %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Participant</th>
+                        <th>Email</th>
+                        <th>Ticket Code</th>
+                        <th>Payment</th>
+                        <th>Attendance</th>
+                        <th>Registered On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participants %}
+                    <tr>
+                        <td>{{ p.participant_name or "—" }}</td>
+                        <td>{{ p.participant_email or "—" }}</td>
+                        <td>{{ p.ticket_code }}</td>
+                        <td>
+                            {% if p.payment_status == 'paid' %}
+                                <span class="pill pill-paid">Paid</span>
+                            {% elif p.payment_status == 'pending' %}
+                                <span class="pill pill-pending">Pending</span>
+                            {% else %}
+                                <span class="pill pill-free">Free</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.attendance_status == 'present' %}
+                                <span class="pill pill-present">Present</span>
+                            {% else %}
+                                <span class="pill pill-notmarked">Not marked</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ p.created_at.strftime('%d %b %Y') if p.created_at else "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">No one has registered for this event yet.</div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from(".panel", { y: 20, opacity: 0, duration: 0.55, ease: "power2.out" });
+    }
+</script>
+{% endblock %}

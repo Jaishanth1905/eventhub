@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Organizer Dashboard - EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+  .organizer-wrap { max-width: 1100px; margin: 0 auto; padding: 100px 1rem 2rem; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .top h1 { margin: 0; color: var(--dark); }
+  .muted { color: var(--gray); margin-top: 0.35rem; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; margin-bottom: 1rem; }
+  .card { background: var(--white); border: 1px solid var(--light); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem; }
+  .label { color: var(--gray); font-size: 0.86rem; }
+  .value { color: var(--dark); font-size: 1.6rem; font-weight: 700; margin-top: 0.3rem; }
+  .section-title { margin: 0 0 0.8rem; color: var(--dark); }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  .table-wrap { overflow-x: auto; }
+  th, td { text-align: left; padding: 0.7rem 0.45rem; border-bottom: 1px solid var(--light); }
+  th { color: var(--gray); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .state { display: inline-flex; padding: 0.22rem 0.55rem; border-radius: 999px; font-size: 0.78rem; }
+  .approved { background: rgba(0, 184, 148, 0.15); color: #0f6a57; }
+  .pending { background: rgba(108, 92, 231, 0.15); color: var(--primary); }
+  .rejected { background: rgba(253, 121, 168, 0.18); color: #a22b63; }
+  .actions { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+  .mini { border: 1px solid var(--light); border-radius: 10px; background: var(--white); color: var(--dark); text-decoration: none; padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+  .empty { border: 1px dashed var(--light); color: var(--gray); border-radius: 12px; padding: 0.9rem; }
+  @media (max-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .table-wrap { min-width: 0; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="organizer-wrap">
+  <header class="top card panel-item">
+    <div>
+      <h1><i class="fa-solid fa-clipboard-list"></i> Organizer Dashboard</h1>
+      <p class="muted">Track your events, approval states, and registration momentum.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('organizer_bp.create_event') }}"><i class="fa-solid fa-calendar-plus"></i> Create Event</a>
+  </header>
+
+  <section class="stats">
+    <article class="card panel-item"><div class="label">Total Events</div><div class="value">{{ stats.total_events if stats and stats.total_events is defined else 0 }}</div></article>
+    <article class="card panel-item"><div class="label">Approved</div><div class="value">{{ stats.approved_events if stats and stats.approved_events is defined else 0 }}</div></article>
+    <article class="card panel-item"><div class="label">Pending</div><div class="value">{{ stats.pending_events if stats and stats.pending_events is defined else 0 }}</div></article>
+    <article class="card panel-item"><div class="label">Registrations</div><div class="value">{{ stats.total_registrations if stats and stats.total_registrations is defined else 0 }}</div></article>
+  </section>
+
+  <section class="card panel-item">
+    <h2 class="section-title"><i class="fa-solid fa-calendar-days"></i> Your Events</h2>
+    {% if events %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Event</th><th>Date</th><th>Venue</th><th>Approval</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+            <tr>
+              <td>{{ event.title if event.title else "Untitled Event" }}</td>
+              <td>{{ event.date if event.date else "TBD" }}</td>
+              <td>{{ event.venue if event.venue else "TBD" }}</td>
+              <td>
+                {% set state = event.approval_status if event.approval_status else "Pending" %}
+                <span class="state {% if state|lower == 'approved' %}approved{% elif state|lower == 'rejected' %}rejected{% else %}pending{% endif %}">{{ state }}</span>
+              </td>
+              <td>
+                <div class="actions">
+                  <a class="mini" href="{{ event.manage_url if event.manage_url else '#' }}">Manage</a>
+                  <a class="mini" href="{{ event.registrations_url if event.registrations_url else '#' }}">Registrations</a>
+                  <a class="mini" href="{{ event.analytics_url if event.analytics_url else '#' }}">Insights</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty">You have not created any events yet. Start by creating your first event.</div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof gsap !== "undefined") {
+    gsap.from(".panel-item", { y: 20, opacity: 0, duration: 0.55, stagger: 0.08, ease: "power2.out" })
+  }
+})
+</script>
+{% endblock %}

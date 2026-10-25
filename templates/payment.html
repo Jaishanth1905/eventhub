@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Payment — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-page {
+        min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        padding: 130px 24px 80px;
+        background: linear-gradient(135deg, #f6f6fb 55%, #eceafc 55%);
+    }
+    .payment-container {
+        display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px;
+        max-width: 900px; width: 100%;
+    }
+    @media (max-width: 800px) { .payment-container { grid-template-columns: 1fr; } }
+
+    .order-summary, .payment-form-card {
+        background: var(--white); border-radius: 20px; padding: 34px; box-shadow: var(--shadow);
+    }
+    .order-summary h3, .payment-form-card h3 { font-size: 20px; margin-bottom: 20px; }
+    .order-event {
+        display: flex; gap: 14px; align-items: center;
+        background: var(--light); border-radius: 14px; padding: 16px; margin-bottom: 20px;
+    }
+    .order-event-icon {
+        width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .order-event h4 { font-size: 16px; }
+    .order-event p { font-size: 12px; color: var(--gray); }
+    .order-row {
+        display: flex; justify-content: space-between; padding: 10px 0;
+        border-bottom: 1px dashed #e5e5f0; font-size: 14px;
+    }
+    .order-row span:first-child { color: var(--gray); }
+    .order-total {
+        display: flex; justify-content: space-between; padding-top: 14px;
+        font-size: 20px; font-weight: 800; color: var(--primary);
+    }
+    .secure-badge {
+        margin-top: 20px; text-align: center; font-size: 12px; color: var(--gray);
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .secure-badge i { color: var(--success); }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 7px; }
+    .pay-input {
+        width: 100%; padding: 13px 16px; border: 2px solid #e5e5f0;
+        border-radius: 12px; font-size: 15px; background: var(--light); transition: var(--transition);
+    }
+    .pay-input:focus {
+        outline: none; border-color: var(--primary); background: var(--white);
+        box-shadow: 0 0 0 4px rgba(108,92,231,.12);
+    }
+    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card-preview {
+        background: linear-gradient(135deg, var(--dark), var(--dark-2));
+        border-radius: 16px; padding: 22px; color: var(--white);
+        margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .card-preview::after {
+        content: ''; position: absolute; top: -40px; right: -40px;
+        width: 140px; height: 140px; border-radius: 50%;
+        background: rgba(108,92,231,.35);
+    }
+    .card-preview .chip { width: 40px; height: 28px; background: var(--warning); border-radius: 6px; margin-bottom: 16px; }
+    .card-preview .card-num { font-size: 18px; letter-spacing: 3px; font-family: monospace; }
+    .card-preview .card-bottom { display: flex; justify-content: space-between; margin-top: 16px; font-size: 13px; opacity: .85; }
+    .sandbox-note {
+        background: rgba(253,203,110,.25); border: 1px dashed var(--warning);
+        color: #8a6d1a; font-size: 12px; padding: 10px 14px;
+        border-radius: 10px; margin-bottom: 18px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="payment-container">
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <h3><i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Order Summary</h3>
+            <div class="order-event">
+                <div class="order-event-icon"><i class="fa-solid fa-ticket"></i></div>
+                <div>
+                    <h4>{{ event.title }}</h4>
+                    <p>{{ event.event_date.strftime('%d %b %Y') }} · {{ event.venue_name }}</p>
+                </div>
+            </div>
+            <div class="order-row"><span>Ticket Price</span><span>₹{{ event.fee }}</span></div>
+            <div class="order-row"><span>Booking Fee</span><span>₹0</span></div>
+            <div class="order-row"><span>GST (18%)</span><span>₹{{ (event.fee * 0.18) | round(2) }}</span></div>
+            <div class="order-total">
+                <span>Total</span><span>₹{{ (event.fee * 1.18) | round(2) }}</span>
+            </div>
+            <div class="secure-badge">
+                <i class="fa-solid fa-shield-halved"></i> 256-bit SSL encrypted · Sandbox Gateway
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="payment-form-card">
+            <h3><i class="fa-solid fa-credit-card" style="color: var(--primary);"></i> Payment Details</h3>
+
+            <div class="sandbox-note">
+                ⚠️ <strong>Sandbox Mode:</strong> This is a test payment. Use any fake card details to simulate payment.
+            </div>
+
+            <!-- Live card preview -->
+            <div class="card-preview">
+                <div class="chip"></div>
+                <div class="card-num" id="previewNum">#### #### #### ####</div>
+                <div class="card-bottom">
+                    <span id="previewName">CARD HOLDER</span>
+                    <span id="previewExp">MM/YY</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('participant.process_payment', registration_id=registration_id) }}">
+                <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" name="card_name" id="cardName" class="pay-input"
+                           placeholder="Name on card" required>
+                </div>
+                <div class="form-group">
+                    <label>Card Number</label>
+                    <input type="text" name="card_number" id="cardNumber" class="pay-input"
+                           placeholder="1234 5678 9012 3456" maxlength="19" required>
+                </div>
+                <div class="pay-grid">
+                    <div class="form-group">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="text" name="expiry" id="cardExp" class="pay-input"
+                               placeholder="MM/YY" maxlength="5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="password" name="cvv" class="pay-input"
+                               placeholder="•••" maxlength="3" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="payBtn">
+                    <i class="fa-solid fa-lock"></i> Pay ₹{{ (event.fee * 1.18) | round(2) }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    gsap.from('.order-summary', { x: -50, opacity: 0, duration: 0.8, ease: 'power3.out' });
+    gsap.from('.payment-form-card', { x: 50, opacity: 0, duration: 0.8, delay: 0.15, ease: 'power3.out' });
+
+    // Live card preview
+    const numInput = document.getElementById('cardNumber');
+    const nameInput = document.getElementById('cardName');
+    const expInput = document.getElementById('cardExp');
+
+    numInput.addEventListener('input', () => {
+        let v = numInput.value.replace(/\D/g, '').substring(0, 16);
+        numInput.value = v.replace(/(.{4})/g, '$1 ').trim();
+        document.getElementById('previewNum').textContent =
+            numInput.value.padEnd(19, '#') || '#### #### #### ####';
+    });
+    nameInput.addEventListener('input', () => {
+        document.getElementById('previewName').textContent =
+            nameInput.value.toUpperCase() || 'CARD HOLDER';
+    });
+    expInput.addEventListener('input', () => {
+        let v = expInput.value.replace(/\D/g, '').substring(0, 4);
+        if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
+        expInput.value = v;
+        document.getElementById('previewExp').textContent = v || 'MM/YY';
+    });
+
+    // Loading state on pay
+    document.getElementById('payBtn').addEventListener('click', function () {
+        this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Payment...';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Edit Event — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-page { max-width: 900px; margin: 0 auto; padding: 120px 24px 80px; }
+    .edit-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .edit-header h1 { margin: 0; color: var(--dark); }
+    .edit-header p { color: var(--gray); margin-top: 0.3rem; }
+    .edit-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .edit-links a { border: 1px solid var(--light); border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.85rem; color: var(--dark); text-decoration: none; }
+    .edit-links a:hover { border-color: var(--primary); color: var(--primary); }
+
+    .edit-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.75rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { font-weight: 600; font-size: 0.9rem; color: var(--dark); }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; border: 1px solid #d7dbe1; border-radius: 10px;
+        padding: 0.7rem 0.85rem; font: inherit; background: #fff;
+    }
+    .form-group textarea { resize: vertical; }
+    .status-pill {
+        display: inline-flex; padding: 0.25rem 0.65rem; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 600;
+    }
+    .status-draft { background: var(--light); color: var(--gray); }
+    .status-pending { background: rgba(108,92,231,.15); color: var(--primary); }
+    .status-approved { background: rgba(0,184,148,.15); color: #0f6a57; }
+    .status-rejected { background: rgba(253,121,168,.18); color: #a22b63; }
+
+    .form-actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    @media (max-width: 700px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .form-group.full-width { grid-column: auto; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-page">
+    {% if event %}
+    <header class="edit-header">
+        <div>
+            <h1><i class="fa-solid fa-pen-to-square"></i> Edit Event</h1>
+            <p>
+                Status:
+                <span class="status-pill status-{{ event.approval_state }}">{{ event.approval_state | title }}</span>
+            </p>
+        </div>
+        <div class="edit-links">
+            <a href="{{ url_for('organizer_bp.manage_schedule', event_id=event.id) }}"><i class="fa-solid fa-list-check"></i> Schedule</a>
+            <a href="{{ url_for('organizer_bp.event_participants', event_id=event.id) }}"><i class="fa-solid fa-users"></i> Participants</a>
+            <a href="{{ url_for('organizer_bp.organizer_workspace') }}"><i class="fa-solid fa-arrow-left"></i> Workspace</a>
+        </div>
+    </header>
+
+    <div class="edit-card">
+        <form method="POST" action="{{ url_for('organizer_bp.edit_event', event_id=event.id) }}" id="editEventForm">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Event Title</label>
+                    <input type="text" name="title" value="{{ event.title or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" name="category" value="{{ event.category or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Venue</label>
+                    <input type="text" name="venue" list="venueList" value="{{ event.venue or '' }}" required>
+                    <datalist id="venueList">
+                        {% for v in venues %}
+                        <option value="{{ v.name }}">{{ v.location or '' }}</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Description</label>
+                    <textarea name="description" rows="5" required>{{ event.description or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="eventDate"
+                           value="{{ event.start_datetime.strftime('%Y-%m-%d') if event.start_datetime else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="eventTime"
+                           value="{{ event.start_datetime.strftime('%H:%M') if event.start_datetime else '' }}" required>
+                </div>
+                <!-- Combined value the backend actually reads -->
+                <input type="hidden" name="start_datetime" id="startDatetimeHidden">
+
+                <div class="form-group">
+                    <label>Capacity</label>
+                    <input type="number" name="capacity" min="1" value="{{ event.capacity or '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Registration Deadline</label>
+                    <input type="date" name="registration_deadline"
+                           value="{{ event.registration_deadline.strftime('%Y-%m-%d') if event.registration_deadline else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ticket Type</label>
+                    <select id="feeType" name="fee_type" required>
+                        <option value="free" {% if event.fee_type == 'free' %}selected{% endif %}>Free Event</option>
+                        <option value="paid" {% if event.fee_type == 'paid' %}selected{% endif %}>Paid Event</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="feeGroup">
+                    <label>Fee</label>
+                    <input type="number" name="fee" min="0" step="0.01" value="{{ event.fee or 0 }}">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Poster filename (already uploaded, optional)</label>
+                    <input type="text" name="poster" value="{{ event.poster or '' }}" placeholder="e.g. myposter.jpg">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" name="action" value="save_draft" class="btn btn-outline">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Draft
+                </button>
+                <button type="submit" name="action" value="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i> Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="edit-card" style="text-align:center;">
+        <p>Event not found.</p>
+        <a class="btn btn-outline" href="{{ url_for('organizer_bp.organizer_workspace') }}">Back to Workspace</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const feeType = document.getElementById("feeType");
+        const feeGroup = document.getElementById("feeGroup");
+        function toggleFee() {
+            feeGroup.style.display = feeType.value === "paid" ? "flex" : "none";
+        }
+        if (feeType) {
+            feeType.addEventListener("change", toggleFee);
+            toggleFee();
+        }
+
+        // Combine the separate date + time inputs into the "YYYY-MM-DD HH:MM:SS"
+        // string the backend expects, right before the form submits.
+        const form = document.getElementById("editEventForm");
+        if (form) {
+            form.addEventListener("submit", function () {
+                const d = document.getElementById("eventDate").value;
+                const t = document.getElementById("eventTime").value;
+                if (d && t) {
+                    document.getElementById("startDatetimeHidden").value = d + " " + t + ":00";
+                }
+            });
+        }
+
+        if (typeof gsap !== "undefined") {
+            gsap.from(".edit-card", { y: 24, opacity: 0, duration: 0.6, ease: "power2.out" });
+        }
+    })();
+</script>
+{% endblock %}

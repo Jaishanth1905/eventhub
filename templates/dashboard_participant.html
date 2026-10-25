@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Participant Dashboard - EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+  .participant-wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+  .participant-wrap { padding-top: 100px; }
+  .card { background: var(--white); border: 1px solid var(--light); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; margin-bottom: 1rem; }
+  .value { font-size: 1.55rem; font-weight: 700; color: var(--dark); margin-top: 0.3rem; }
+  .label { color: var(--gray); font-size: 0.86rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .participant-wrap .section-title { margin: 0 0 0.8rem; color: var(--dark); font-size: 1.15rem; font-weight: 700; text-align: left; }
+  .ticket, .activity { border: 1px solid var(--light); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.6rem; }
+  .meta { color: var(--gray); font-size: 0.9rem; margin-top: 0.25rem; }
+  .state { display: inline-flex; padding: 0.22rem 0.55rem; border-radius: 999px; font-size: 0.78rem; background: rgba(108, 92, 231, 0.12); color: var(--primary); }
+  .empty { border: 1px dashed var(--light); border-radius: 12px; color: var(--gray); padding: 0.9rem; }
+  @media (max-width: 960px) { .stats { grid-template-columns: 1fr; } .grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="participant-wrap">
+  <section class="stats">
+    <article class="card panel-item"><div class="label">Upcoming Events</div><div class="value">{{ stats.upcoming_count if stats and stats.upcoming_count is defined else 0 }}</div></article>
+    <article class="card panel-item"><div class="label">Attended</div><div class="value">{{ stats.attended_count if stats and stats.attended_count is defined else 0 }}</div></article>
+    <article class="card panel-item"><div class="label">Certificates</div><div class="value">{{ stats.certificate_count if stats and stats.certificate_count is defined else 0 }}</div></article>
+  </section>
+
+  <section class="grid">
+    <article class="card panel-item">
+      <h2 class="section-title"><i class="fa-solid fa-ticket"></i> Upcoming Tickets</h2>
+      {% if upcoming_registrations %}
+        {% for reg in upcoming_registrations %}
+          <div class="ticket">
+            <strong>{{ reg.event_title if reg.event_title else "Event" }}</strong>
+            <div class="meta">{{ reg.event_date if reg.event_date else "TBD" }} · {{ reg.venue if reg.venue else "Venue TBD" }}</div>
+            <div style="margin-top:0.35rem;"><span class="state">{{ reg.status if reg.status else "Registered" }}</span></div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No upcoming tickets. Browse events and secure a spot.</div>
+      {% endif %}
+    </article>
+
+    <article class="card panel-item">
+      <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Activity</h2>
+      {% if recent_registrations %}
+        {% for reg in recent_registrations %}
+          <div class="activity">
+            <strong>{{ reg.event_title if reg.event_title else "Event" }}</strong>
+            <div class="meta">{{ reg.attended_on if reg.attended_on else "Date unavailable" }}</div>
+            <div class="meta">{{ reg.certificate_status if reg.certificate_status else "Certificate not issued" }}</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No recent activity yet.</div>
+      {% endif %}
+    </article>
+  </section>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Attendance | EventHub{% endblock %}
+
+{% block content %}
+<section class="scan-page">
+    <div class="scan-card" id="scanCard">
+        <header class="scan-header">
+            <h1>Scan Attendance</h1>
+            {% if event %}
+                <p><strong>{{ event.title }}</strong>{% if event.start_datetime %} · {{ event.start_datetime.strftime('%d %b %Y, %I:%M %p') }}{% endif %}</p>
+            {% else %}
+                <p>Event details are currently unavailable.</p>
+            {% endif %}
+        </header>
+
+        <div class="scanner-viewport" aria-hidden="true">
+            <div class="scanner-frame">
+                <div class="scan-line"></div>
+                <div class="corner corner-top-left"></div>
+                <div class="corner corner-top-right"></div>
+                <div class="corner corner-bottom-left"></div>
+                <div class="corner corner-bottom-right"></div>
+            </div>
+        </div>
+
+        <form class="manual-entry-form" method="POST" action="{{ url_for('organizer_bp.scan_qr', event_id=event.id) }}">
+            <label for="qr_data">Manual QR / Ticket Code</label>
+            <div class="entry-row">
+                <input type="text" id="qr_data" name="qr_data" required placeholder="e.g. EH-9F3A2B71C4 or registration ID" autofocus>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+
+        {% if scan_result %}
+            <section class="scan-result {% if scan_result.success %}success{% else %}error{% endif %}">
+                <h2>Most Recent Scan</h2>
+                {% if scan_result.attendee_name %}
+                    <p><strong>Participant:</strong> {{ scan_result.attendee_name }}</p>
+                {% endif %}
+                {% if scan_result.registration_id %}
+                    <p><strong>Registration ID:</strong> {{ scan_result.registration_id }}</p>
+                {% endif %}
+                {% if scan_result.message %}
+                    <p><strong>Status:</strong> {{ scan_result.message }}</p>
+                {% endif %}
+                {% if scan_result.attendance_state %}
+                    <p><strong>Attendance:</strong> {{ scan_result.attendance_state }}</p>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        <div class="scan-actions">
+            <a href="{{ url_for('organizer_bp.event_participants', event_id=event.id) }}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Back to Participants
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .scan-page { width: 100%; padding: 130px 1rem 3rem; display: flex; justify-content: center; }
+    .scan-card { width: min(760px, 100%); background: #fff; border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.08); padding: 1.5rem; }
+    .scan-header h1 { margin: 0 0 .35rem; }
+    .scan-header p { margin: 0 0 1.25rem; color: #666; }
+    .scanner-viewport { display: flex; justify-content: center; margin-bottom: 1.25rem; }
+    .scanner-frame { width: min(360px, 100%); aspect-ratio: 1 / 1; border: 2px solid #d7dbe1; border-radius: 14px; position: relative; background: linear-gradient(180deg, rgba(245,247,250,0.7), rgba(238,241,245,0.7)); overflow: hidden; }
+    .scan-line { position: absolute; left: 8%; width: 84%; height: 3px; background: rgba(40,120,255,.9); box-shadow: 0 0 8px rgba(40,120,255,.6); animation: scanLine 2.2s linear infinite; }
+    .corner { position: absolute; width: 24px; height: 24px; border-color: #3b4b63; border-style: solid; }
+    .corner-top-left { top: 10px; left: 10px; border-width: 3px 0 0 3px; }
+    .corner-top-right { top: 10px; right: 10px; border-width: 3px 3px 0 0; }
+    .corner-bottom-left { bottom: 10px; left: 10px; border-width: 0 0 3px 3px; }
+    .corner-bottom-right { bottom: 10px; right: 10px; border-width: 0 3px 3px 0; }
+    @keyframes scanLine { 0% { top: 10%; } 50% { top: 82%; } 100% { top: 10%; } }
+    .manual-entry-form label { display: block; font-weight: 600; margin-bottom: .5rem; }
+    .entry-row { display: flex; gap: .65rem; flex-wrap: wrap; }
+    .entry-row input { flex: 1 1 240px; border: 1px solid #d7dbe1; border-radius: 10px; padding: .72rem .85rem; font: inherit; }
+    .scan-result { margin-top: 1.25rem; border-radius: 12px; padding: 1rem; border: 1px solid #d7dbe1; background: #f8f9fb; }
+    .scan-result.success { border-color: #8fd3a8; background: #edf9f1; }
+    .scan-result.error { border-color: #ef9b9b; background: #fff1f1; }
+    .scan-result h2 { margin-top: 0; margin-bottom: .65rem; font-size: 1.1rem; }
+    .scan-result p { margin: .35rem 0; }
+    .scan-actions { margin-top: 1rem; }
+    @media (max-width: 680px) { .scan-card { padding: 1rem; } }
+</style>
+
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from("#scanCard", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" });
+    }
+    // Re-focus the input after each submit so a barcode-scanner "keyboard"
+    // device can keep firing entries back-to-back without clicking in.
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("qr_data");
+        if (input) input.focus();
+    });
+</script>
+{% endblock %}

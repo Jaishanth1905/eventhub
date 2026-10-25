@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}My Tickets — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tickets-page { max-width: 1000px; margin: 0 auto; padding: 120px 24px 80px; }
+    .tickets-header { text-align: center; margin-bottom: 40px; }
+    .tickets-header h1 { font-size: 36px; font-weight: 800; }
+    .tickets-header p { color: var(--gray); }
+
+    .ticket-row {
+        background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+        display: grid; grid-template-columns: 110px 1fr auto; gap: 22px;
+        padding: 22px; margin-bottom: 20px; align-items: center;
+        transition: var(--transition); border-left: 5px solid var(--primary);
+    }
+    .ticket-row:hover { transform: translateX(6px); }
+    .ticket-qr {
+        width: 110px; height: 110px; border-radius: 12px; overflow: hidden;
+        background: var(--light); display: flex; align-items: center; justify-content: center;
+    }
+    .ticket-qr img { width: 100%; height: 100%; object-fit: cover; }
+    .ticket-info h3 { font-size: 18px; margin-bottom: 6px; }
+    .ticket-info p { color: var(--gray); font-size: 13px; margin-bottom: 4px; }
+    .ticket-info p i { width: 18px; color: var(--primary); }
+    .status-badge {
+        display: inline-block; padding: 4px 14px; border-radius: 50px;
+        font-size: 11px; font-weight: 700; margin-top: 6px;
+    }
+    .badge-registered { background: rgba(108,92,231,.12); color: var(--primary); }
+    .badge-attended { background: rgba(0,184,148,.12); color: var(--success); }
+    .badge-paid { background: rgba(0,206,201,.14); color: #008f8b; }
+    .ticket-actions { display: flex; flex-direction: column; gap: 10px; }
+    .ticket-actions .btn { justify-content: center; font-size: 13px; padding: 9px 18px; }
+
+    .empty-state { text-align: center; padding: 80px 20px; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .empty-state i { font-size: 70px; color: #d5d5e8; margin-bottom: 18px; }
+    .empty-state h3 { font-size: 22px; margin-bottom: 8px; }
+    .empty-state p { color: var(--gray); margin-bottom: 22px; }
+
+    @media (max-width: 700px) {
+        .ticket-row { grid-template-columns: 1fr; text-align: center; }
+        .ticket-qr { margin: 0 auto; }
+        .ticket-actions { flex-direction: row; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tickets-page">
+    <div class="tickets-header">
+        <h1>My <span class="gradient-text">Tickets</span> 🎫</h1>
+        <p>All your event registrations in one place</p>
+    </div>
+
+    {% if registrations %}
+        {% for reg in registrations %}
+        <div class="ticket-row">
+            <div class="ticket-qr">
+                {% if reg.qr_code %}
+                    <img src="{{ url_for('static', filename='uploads/qr/' + reg.qr_code) }}" alt="QR Ticket">
+                {% else %}
+                    <i class="fa-solid fa-qrcode" style="font-size:40px;color:#c5c5dd;"></i>
+                {% endif %}
+            </div>
+            <div class="ticket-info">
+                <h3>{{ reg.event_title }}</h3>
+                <p><i class="fa-solid fa-calendar"></i> {{ reg.event_date.strftime('%d %b %Y') }} · {{ reg.event_time.strftime('%I:%M %p') }}</p>
+                <p><i class="fa-solid fa-location-dot"></i> {{ reg.venue_name }}</p>
+                <p><i class="fa-solid fa-hashtag"></i> Reg ID: EH-{{ '%05d' | format(reg.id) }}</p>
+                <span class="status-badge badge-registered">REGISTERED</span>
+                {% if reg.payment_status == 'paid' %}
+                    <span class="status-badge badge-paid">💳 PAID ₹{{ reg.amount }}</span>
+                {% else %}
+                    <span class="status-badge" style="background:#e8e8f5;color:var(--gray);">FREE EVENT</span>
+                {% endif %}
+                {% if reg.attended %}
+                    <span class="status-badge badge-attended">✔ ATTENDED</span>
+                {% endif %}
+            </div>
+            <div class="ticket-actions">
+                <a href="{{ url_for('participant.view_ticket', registration_id=reg.id) }}" class="btn btn-outline">
+                    <i class="fa-solid fa-qrcode"></i> Ticket
+                </a>
+                {% if reg.attended and not reg.feedback_given %}
+                <a href="{{ url_for('participant.feedback', registration_id=reg.id) }}" class="btn btn-primary">
+                    <i class="fa-solid fa-star"></i> Feedback
+                </a>
+                {% endif %}
+                {% if reg.attended and reg.feedback_given %}
+                <a href="{{ url_for('participant.certificate', registration_id=reg.id) }}" class="btn btn-primary">
+                    <i class="fa-solid fa-certificate"></i> Certificate
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-ticket-simple"></i>
+            <h3>No tickets yet 😅</h3>
+            <p>You haven't registered for any events. Let's fix that!</p>
+            <a href="{{ url_for('main.events') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-compass"></i> Explore Events
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

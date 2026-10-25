@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}My Ticket — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ticket-page {
+        min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        padding: 130px 24px 80px;
+        background: linear-gradient(135deg, #f6f6fb 55%, #eceafc 55%);
+    }
+    .ticket-stub {
+        background: var(--white); max-width: 420px; width: 100%;
+        border-radius: 22px; box-shadow: var(--shadow); overflow: hidden;
+    }
+    .ticket-top {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: var(--white); padding: 28px 30px; text-align: center;
+    }
+    .ticket-top h2 { font-size: 20px; margin-bottom: 4px; }
+    .ticket-top p { font-size: 13px; opacity: .9; }
+    .ticket-qr-wrap {
+        display: flex; justify-content: center; padding: 30px 0 10px; position: relative;
+    }
+    .ticket-qr-wrap img {
+        width: 200px; height: 200px; border-radius: 14px;
+        border: 6px solid var(--light); box-shadow: var(--shadow);
+    }
+    .ticket-perforation {
+        display: flex; align-items: center; margin: 20px 0;
+    }
+    .ticket-perforation::before, .ticket-perforation::after {
+        content: ''; flex: 1; border-top: 2px dashed #e0e0ee;
+    }
+    .ticket-perforation span {
+        width: 14px; height: 14px; border-radius: 50%; background: var(--light);
+        margin: 0 -7px; box-shadow: 0 0 0 6px var(--white);
+    }
+    .ticket-details { padding: 0 30px 30px; }
+    .ticket-details div {
+        display: flex; justify-content: space-between; padding: 9px 0;
+        border-bottom: 1px dashed #ececf6; font-size: 14px;
+    }
+    .ticket-details div span:first-child { color: var(--gray); }
+    .ticket-details div span:last-child { font-weight: 700; }
+    .ticket-code {
+        text-align: center; font-family: monospace; font-size: 16px;
+        letter-spacing: 1px; background: var(--light); border-radius: 10px;
+        padding: 12px; margin: 18px 30px 0; color: var(--primary); font-weight: 700;
+    }
+    .ticket-actions { padding: 24px 30px 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .ticket-actions .btn { flex: 1; justify-content: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-page">
+    <div class="ticket-stub" id="ticketStub">
+        <div class="ticket-top">
+            <h2>{{ registration.event_title }}</h2>
+            <p>{{ registration.event_date.strftime('%d %b %Y') }} · {{ registration.event_time.strftime('%I:%M %p') }}</p>
+        </div>
+
+        <div class="ticket-qr-wrap">
+            {% if registration.qr_code %}
+                <img src="{{ url_for('static', filename='uploads/qr/' + registration.qr_code) }}" alt="QR Ticket">
+            {% else %}
+                <i class="fa-solid fa-qrcode" style="font-size:80px;color:#c5c5dd;"></i>
+            {% endif %}
+        </div>
+
+        <div class="ticket-code">{{ registration.ticket_code }}</div>
+
+        <div class="ticket-perforation"><span></span></div>
+
+        <div class="ticket-details">
+            <div><span>👤 Attendee</span><span>{{ registration.participant_name }}</span></div>
+            <div><span>📍 Venue</span><span>{{ registration.venue_name }}</span></div>
+            <div><span>💳 Payment</span>
+                <span>
+                    {% if registration.payment_status == 'paid' %}PAID
+                    {% elif registration.payment_status == 'not_required' %}FREE EVENT
+                    {% else %}{{ registration.payment_status | upper }}{% endif %}
+                </span>
+            </div>
+            <div><span>✅ Attendance</span>
+                <span>{% if registration.attendance_status == 'present' %}Marked{% else %}Not yet{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="ticket-actions">
+            <a href="{{ url_for('participant.my_registrations') }}" class="btn btn-outline">
+                <i class="fa-solid fa-arrow-left"></i> My Tickets
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fa-solid fa-print"></i> Print / Save
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from('#ticketStub', { y: 50, opacity: 0, duration: 0.8, ease: 'power3.out' });
+    }
+</script>
+{% endblock %}

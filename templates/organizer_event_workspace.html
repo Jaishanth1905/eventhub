@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container" style="padding:1.5rem 0;">
+    <style>
+        .workspace-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.9rem; }
+        .workspace-card { background:var(--white); border:1px solid var(--gray); border-radius:var(--radius); box-shadow:var(--shadow); padding:1rem; }
+        .workspace-meta { margin:.2rem 0; color:var(--dark); opacity:.8; }
+        .workspace-actions { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.75rem; }
+        .status-chip { display:inline-block; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; color:var(--white); background:var(--gray); }
+        .status-chip.approved { background:var(--success); }
+        .status-chip.rejected { background:var(--danger); }
+        .status-chip.pending { background:var(--warning); }
+        @media (max-width:640px) { .workspace-card { padding:.85rem; } }
+    </style>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <h2 style="margin:0;color:var(--dark);">Organizer Event Workspace</h2>
+        <div style="display:flex;gap:.5rem;">
+            <a class="btn btn-primary" href="{{ url_for('organizer_bp.create_event') }}">Create Event</a>
+            <a class="btn btn-outline" href="{{ url_for('organizer_bp.manage_venues') }}">Manage Venues</a>
+        </div>
+    </div>
+    {% if events and events|length > 0 %}
+    <div class="workspace-grid">
+        {% for event in events %}
+        {% set status = event.get('approval_state', 'draft') %}
+        <article class="workspace-card">
+            <h3 style="margin:.05rem 0 .3rem 0;">{{ event.get("title") or "Untitled event" }}</h3>
+            <p class="workspace-meta">#{{ event.get("id") or "-" }}</p>
+            <p style="margin:.3rem 0;">
+                <span class="status-chip {% if status == 'approved' %}approved{% elif status == 'rejected' %}rejected{% elif status == 'pending' %}pending{% endif %}">
+                    {{ (status or "draft")|replace("_", " ")|title }}
+                </span>
+            </p>
+            <p class="workspace-meta">Starts: {{ event.get("start_datetime") or "TBD" }}</p>
+            <p class="workspace-meta">Venue: {{ event.get("venue") or "TBD" }}</p>
+            <p class="workspace-meta">Capacity: {{ event.get("capacity") or 0 }}</p>
+            <p class="workspace-meta">Registrations: {{ event.get("registrations_count") or 0 }}</p>
+            <div class="workspace-actions">
+                <a class="btn btn-sm btn-outline" href="{{ url_for('organizer_bp.edit_event', event_id=event.get('id')) }}">Edit</a>
+                <a class="btn btn-sm btn-outline" href="{{ url_for('organizer_bp.manage_schedule', event_id=event.get('id')) }}">Schedule</a>
+                <a class="btn btn-sm btn-outline" href="{{ url_for('organizer_bp.event_participants', event_id=event.get('id')) }}">Participants</a>
+                {% if status == 'draft' %}
+                <form method="post" action="{{ url_for('organizer_bp.submit_for_approval', event_id=event.get('id')) }}" style="display:inline;">
+                    <button class="btn btn-sm btn-primary" type="submit">Submit</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="workspace-card" style="text-align:center;">
+        <h3 style="margin:.1rem 0 .35rem 0;">No events yet</h3>
+        <p class="workspace-meta" style="margin:0;">Create an event to manage schedule, participants, and review submission.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

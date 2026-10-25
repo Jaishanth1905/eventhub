@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Payment Successful 🎉 — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-page {
+        min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        padding: 120px 24px 80px;
+        background: linear-gradient(135deg, #f0fdf6, #f6f6fb);
+    }
+    .success-card {
+        background: var(--white); max-width: 520px; width: 100%;
+        border-radius: 24px; padding: 50px 40px; text-align: center; box-shadow: var(--shadow);
+    }
+    .success-icon {
+        width: 96px; height: 96px; margin: 0 auto 24px; border-radius: 50%;
+        background: var(--success); color: var(--white); font-size: 44px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 12px 34px rgba(0,184,148,.4);
+    }
+    .success-card h1 { font-size: 28px; margin-bottom: 10px; }
+    .success-card > p { color: var(--gray); margin-bottom: 26px; }
+    .payment-ref {
+        background: var(--light); border-radius: 14px; padding: 18px; margin-bottom: 26px;
+    }
+    .payment-ref div {
+        display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0;
+    }
+    .payment-ref div span:first-child { color: var(--gray); }
+    .payment-ref div span:last-child { font-weight: 700; }
+    .success-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .confetti {
+        position: fixed; top: -10px; font-size: 22px; z-index: 500; pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-page">
+    <div class="success-card" id="successCard">
+        <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+        <h1>Payment Successful! 🎉</h1>
+        <p>Your registration is confirmed. Your QR ticket is ready!</p>
+
+        <div class="payment-ref">
+            <div><span>Payment ID</span><span>{{ payment.payment_id }}</span></div>
+            <div><span>Event</span><span>{{ event.title }}</span></div>
+            <div><span>Amount Paid</span><span>₹{{ payment.amount }}</span></div>
+            <div><span>Status</span><span style="color: var(--success);">✔ PAID</span></div>
+            <div><span>Date</span><span>{{ payment.transaction_date.strftime('%d %b %Y, %I:%M %p') }}</span></div>
+        </div>
+
+        <div class="success-btns">
+            <a href="{{ url_for('participant.view_ticket', registration_id=registration.id) }}" class="btn btn-primary">
+                <i class="fa-solid fa-qrcode"></i> View My Ticket
+            </a>
+            <a href="{{ url_for('main.events') }}" class="btn btn-outline">
+                <i class="fa-solid fa-compass"></i> Browse More
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    gsap.from('#successCard', { scale: 0.8, opacity: 0, duration: 0.9, ease: 'back.out(1.7)' });
+    gsap.from('.success-icon', { scale: 0, duration: 0.7, delay: 0.3, ease: 'back.out(2.5)' });
+
+    // Confetti 🎊
+    const emojis = ['🎉', '🎊', '✨', '🎈', '⭐'];
+    for (let i = 0; i < 30; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        c.style.left = Math.random() * 100 + 'vw';
+        document.body.appendChild(c);
+        gsap.to(c, {
+            y: window.innerHeight + 60, rotation: Math.random() * 360,
+            duration: 2.5 + Math.random() * 2, delay: Math.random() * 0.8,
+            ease: 'power1.in', onComplete: () => c.remove()
+        });
+    }
+</script>
+{% endblock %}

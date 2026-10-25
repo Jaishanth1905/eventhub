@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Manage Venues — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .venues-page { max-width: 1000px; margin: 0 auto; padding: 120px 24px 80px; }
+    .venues-header { margin-bottom: 1.5rem; }
+    .venues-header h1 { margin: 0; color: var(--dark); }
+    .venues-header p { color: var(--gray); margin-top: 0.3rem; }
+
+    .panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.25rem; }
+    .panel h2 { margin: 0 0 1rem; font-size: 1.05rem; color: var(--dark); }
+
+    .filter-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.82rem; font-weight: 600; color: var(--dark); }
+    .filter-group input {
+        border: 1px solid #d7dbe1; border-radius: 10px; padding: 0.6rem 0.75rem; font: inherit;
+    }
+
+    .venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .venue-card {
+        border: 1px solid var(--light); border-radius: 12px; padding: 1rem;
+        display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .venue-card h3 { margin: 0; font-size: 1rem; color: var(--dark); }
+    .venue-card p { margin: 0; font-size: 0.85rem; color: var(--gray); }
+    .venue-status {
+        align-self: flex-start; padding: 0.2rem 0.6rem; border-radius: 999px;
+        font-size: 0.76rem; font-weight: 600;
+    }
+    .status-available { background: rgba(0,184,148,.15); color: #0f6a57; }
+    .status-unavailable { background: rgba(214,48,49,.12); color: var(--danger); }
+    .status-inactive { background: var(--light); color: var(--gray); }
+    .empty { color: var(--gray); text-align: center; padding: 1.5rem 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="venues-page">
+    <header class="venues-header">
+        <h1><i class="fa-solid fa-location-dot"></i> Venues</h1>
+        <p>Browse venues and check availability before scheduling a session.</p>
+    </header>
+
+    <section class="panel">
+        <h2><i class="fa-solid fa-magnifying-glass"></i> Check Availability</h2>
+        <form method="GET" action="{{ url_for('organizer_bp.venue_availability') }}" class="filter-row">
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" name="date" value="{{ filters.date if filters and filters.date else '' }}">
+            </div>
+            <div class="filter-group">
+                <label>Start Time</label>
+                <input type="time" name="start_time" value="{{ filters.start_time if filters and filters.start_time else '' }}">
+            </div>
+            <div class="filter-group">
+                <label>End Time</label>
+                <input type="time" name="end_time" value="{{ filters.end_time if filters and filters.end_time else '' }}">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Check</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2><i class="fa-solid fa-building"></i> All Venues</h2>
+        {% if venues %}
+        <div class="venue-grid">
+            {% for v in venues %}
+            <article class="venue-card">
+                <h3>{{ v.name }}</h3>
+                <p><i class="fa-solid fa-location-dot"></i> {{ v.location or "Location TBD" }}</p>
+                <p><i class="fa-solid fa-users"></i> Capacity: {{ v.capacity or "—" }}</p>
+                {% if v.is_available is defined %}
+                    {% if v.is_available %}
+                        <span class="venue-status status-available">Available</span>
+                    {% else %}
+                        <span class="venue-status status-unavailable">Booked</span>
+                    {% endif %}
+                {% elif not v.is_active %}
+                    <span class="venue-status status-inactive">Inactive</span>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">No venues found. Ask an admin to add some to the <code>venues</code> table.</div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from(".panel", { y: 20, opacity: 0, duration: 0.55, stagger: 0.1, ease: "power2.out" });
+    }
+</script>
+{% endblock %}

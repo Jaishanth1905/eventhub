@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-wrap { max-width: 1200px; margin: 0 auto; padding: 100px 1rem 2rem; }
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .dashboard-title { margin: 0; color: var(--dark); }
+    .muted {
+        color: var(--gray);
+        margin-top: 0.35rem;
+    }
+    .pending-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(108, 92, 231, 0.12);
+        color: var(--primary);
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .stat-card, .panel {
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1rem;
+    }
+    .stat-label {
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+    .stat-value {
+        margin-top: 0.4rem;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+    .layout-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1rem;
+    }
+    .panel h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: var(--dark);
+    }
+    .table-wrap {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        text-align: left;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--light);
+        color: var(--dark);
+        vertical-align: middle;
+    }
+    th {
+        color: var(--gray);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        background: var(--light);
+        color: var(--dark);
+    }
+    .action-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .btn-lite {
+        border: 1px solid var(--light);
+        background: var(--white);
+        color: var(--dark);
+        border-radius: var(--radius);
+        padding: 0.45rem 0.75rem;
+        font-size: 0.85rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-approve { background: rgba(0, 184, 148, 0.12); color: #0f6a57; border-color: rgba(0, 184, 148, 0.35); }
+    .btn-reject { background: rgba(253, 121, 168, 0.12); color: #a22b63; border-color: rgba(253, 121, 168, 0.35); }
+    .card-list {
+        display: none;
+        gap: 0.75rem;
+        flex-direction: column;
+    }
+    .mobile-card {
+        border: 1px solid var(--light);
+        border-radius: var(--radius);
+        padding: 0.85rem;
+    }
+    .quick-actions {
+        display: grid;
+        gap: 0.6rem;
+    }
+    .quick-actions a {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        text-decoration: none;
+        border: 1px solid var(--light);
+        border-radius: var(--radius);
+        padding: 0.7rem;
+        color: var(--dark);
+        transition: transform 0.2s ease;
+    }
+    .quick-actions a:hover { transform: translateY(-2px); border-color: rgba(0, 206, 201, 0.6); }
+    .empty {
+        background: var(--light);
+        border-radius: var(--radius);
+        padding: 0.85rem;
+        color: var(--gray);
+        font-size: 0.95rem;
+    }
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .layout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 768px) {
+        .table-wrap {
+            display: none;
+        }
+        .card-list {
+            display: flex;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-wrap">
+    <header class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title"><i class="fa-solid fa-shield-halved"></i> Admin Dashboard</h1>
+            <p class="muted">Monitor EventHub approvals, registrations, and platform activity.</p>
+        </div>
+        <span class="pending-count"><i class="fa-solid fa-hourglass-half"></i> {{ pending_events|length if pending_events else 0 }} Pending</span>
+    </header>
+
+    <section class="stats-grid">
+        <article class="stat-card panel-item">
+            <div class="stat-label"><i class="fa-solid fa-calendar-days"></i> Total Events</div>
+            <div class="stat-value">{{ stats.total_events if stats and stats.total_events is not none else 0 }}</div>
+        </article>
+        <article class="stat-card panel-item">
+            <div class="stat-label"><i class="fa-solid fa-users"></i> Total Users</div>
+            <div class="stat-value">{{ stats.total_users if stats and stats.total_users is not none else 0 }}</div>
+        </article>
+        <article class="stat-card panel-item">
+            <div class="stat-label"><i class="fa-solid fa-ticket"></i> Registrations</div>
+            <div class="stat-value">{{ stats.total_registrations if stats and stats.total_registrations is not none else 0 }}</div>
+        </article>
+        <article class="stat-card panel-item">
+            <div class="stat-label"><i class="fa-solid fa-coins"></i> Revenue</div>
+            <div class="stat-value">{{ stats.revenue if stats and stats.revenue is not none else 0 }}</div>
+        </article>
+    </section>
+
+    <section class="layout-grid">
+        <div class="panel panel-item">
+            <h3><i class="fa-solid fa-hourglass-half"></i> Pending Event Approvals</h3>
+            {% if pending_events %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Organizer</th>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in pending_events %}
+                            <tr>
+                                <td>{{ event.title if event.title else "Untitled Event" }}</td>
+                                <td>{{ event.organizer_name if event.organizer_name else "Unknown Organizer" }}</td>
+                                <td>{{ event.date if event.date else "TBD" }}</td>
+                                <td>{{ event.category if event.category else "General" }}</td>
+                                <td>
+                                    <div class="action-row">
+                                        <form method="post" action="{{ event.approve_url if event.approve_url else '#' }}">
+                                            <button type="submit" class="btn-lite btn-approve"><i class="fa-solid fa-check"></i> Approve</button>
+                                        </form>
+                                        <form method="post" action="{{ event.reject_url if event.reject_url else '#' }}">
+                                            <button type="submit" class="btn-lite btn-reject"><i class="fa-solid fa-xmark"></i> Reject</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-list">
+                    {% for event in pending_events %}
+                    <article class="mobile-card">
+                        <strong>{{ event.title if event.title else "Untitled Event" }}</strong>
+                        <p class="muted">{{ event.organizer_name if event.organizer_name else "Unknown Organizer" }} · {{ event.date if event.date else "TBD" }}</p>
+                        <div class="action-row">
+                            <form method="post" action="{{ event.approve_url if event.approve_url else '#' }}">
+                                <button type="submit" class="btn-lite btn-approve"><i class="fa-solid fa-check"></i> Approve</button>
+                            </form>
+                            <form method="post" action="{{ event.reject_url if event.reject_url else '#' }}">
+                                <button type="submit" class="btn-lite btn-reject"><i class="fa-solid fa-xmark"></i> Reject</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">No pending events to review at the moment.</div>
+            {% endif %}
+        </div>
+
+        <aside class="panel panel-item">
+            <h3><i class="fa-solid fa-bolt"></i> Quick Actions</h3>
+            <nav class="quick-actions">
+                <a href="#"><i class="fa-solid fa-list-check"></i> Manage Event Categories</a>
+                <a href="#"><i class="fa-solid fa-user-shield"></i> Review Organizer Accounts</a>
+                <a href="#"><i class="fa-solid fa-file-export"></i> Export Platform Reports</a>
+                <a href="#"><i class="fa-solid fa-gear"></i> Platform Settings</a>
+                <a href="#"><i class="fa-solid fa-link"></i> Audit Action Log</a>
+            </nav>
+        </aside>
+    </section>
+
+    <section class="panel panel-item" style="margin-top:1rem;">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Registrations</h3>
+        {% if recent_registrations %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Participant</th>
+                            <th>Event</th>
+                            <th>Registered On</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registration in recent_registrations %}
+                        <tr>
+                            <td>{{ registration.participant_name if registration.participant_name else "Participant" }}</td>
+                            <td>{{ registration.event_title if registration.event_title else "Event" }}</td>
+                            <td>{{ registration.created_at if registration.created_at else "N/A" }}</td>
+                            <td><span class="status"><i class="fa-solid fa-circle-check"></i> {{ registration.status if registration.status else "Confirmed" }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty">No recent registrations to display.</div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

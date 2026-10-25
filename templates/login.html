@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Login — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: 100vh; display: flex; align-items: center;
+        justify-content: center; padding: 120px 24px 60px;
+        background: linear-gradient(135deg, #f6f6fb 50%, #eceafc 50%);
+    }
+    .auth-card {
+        background: var(--white); width: 100%; max-width: 440px;
+        padding: 44px 40px; border-radius: 20px; box-shadow: var(--shadow);
+    }
+    .auth-icon {
+        width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: var(--white); font-size: 26px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .auth-card h2 { text-align: center; font-size: 26px; margin-bottom: 6px; }
+    .auth-sub { text-align: center; color: var(--gray); font-size: 14px; margin-bottom: 28px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px;
+    }
+    .input-icon { position: relative; }
+    .input-icon i {
+        position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+        color: var(--gray); font-size: 15px;
+    }
+    .form-control {
+        width: 100%; padding: 13px 16px 13px 44px;
+        border: 2px solid #e5e5f0; border-radius: 12px;
+        font-size: 15px; transition: var(--transition); background: var(--light);
+    }
+    .form-control:focus {
+        outline: none; border-color: var(--primary);
+        background: var(--white); box-shadow: 0 0 0 4px rgba(108,92,231,.12);
+    }
+    .form-row {
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 22px; font-size: 14px;
+    }
+    .form-row label { display: flex; align-items: center; gap: 6px; color: var(--gray); }
+    .form-row a { color: var(--primary); font-weight: 600; }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; color: var(--gray); }
+    .auth-footer a { color: var(--primary); font-weight: 700; }
+    .divider {
+        display: flex; align-items: center; gap: 12px;
+        margin: 22px 0; color: var(--gray); font-size: 13px;
+    }
+    .divider::before, .divider::after {
+        content: ''; flex: 1; height: 1px; background: #e5e5f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card" id="authCard">
+        <div class="auth-icon"><i class="fa-solid fa-user"></i></div>
+        <h2>Welcome Back! 👋</h2>
+        <p class="auth-sub">Login to manage your events & tickets</p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-icon">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="you@example.com" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-icon">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label><input type="checkbox" name="remember"> Remember me</label>
+                <a href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </button>
+        </form>
+
+        <div class="divider">new to EventHub?</div>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="{{ url_for('auth.register') }}">Create one free</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    gsap.from('#authCard', { y: 50, opacity: 0, duration: 0.9, ease: 'power3.out' });
+</script>
+{% endblock %}

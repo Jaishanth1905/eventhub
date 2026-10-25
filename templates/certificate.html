@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Certificate — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cert-page {
+        min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        padding: 130px 24px 80px; gap: 26px;
+        background: linear-gradient(135deg, #f6f6fb 55%, #eceafc 55%);
+    }
+    .certificate {
+        background: var(--white); width: min(820px, 100%); aspect-ratio: 1.41 / 1;
+        border-radius: 18px; box-shadow: var(--shadow); position: relative;
+        padding: 50px; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; text-align: center;
+        border: 10px solid var(--primary);
+        outline: 2px solid var(--accent); outline-offset: -20px;
+    }
+    .certificate .badge {
+        width: 70px; height: 70px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: var(--white); display: flex; align-items: center; justify-content: center;
+        font-size: 30px; margin-bottom: 18px; box-shadow: var(--shadow);
+    }
+    .certificate .kicker {
+        text-transform: uppercase; letter-spacing: 3px; font-size: 13px;
+        color: var(--gray); font-weight: 700; margin-bottom: 8px;
+    }
+    .certificate h1 { font-size: clamp(24px, 4vw, 34px); margin-bottom: 18px; }
+    .certificate .name {
+        font-size: clamp(28px, 5vw, 42px); font-family: 'Segoe UI', serif;
+        color: var(--primary); font-weight: 800; margin: 10px 0 18px;
+        border-bottom: 2px solid var(--secondary); padding-bottom: 10px;
+        display: inline-block;
+    }
+    .certificate .event-line { font-size: 16px; color: #44445a; max-width: 560px; line-height: 1.7; }
+    .certificate .event-line strong { color: var(--dark); }
+    .certificate .footer-row {
+        margin-top: 30px; display: flex; justify-content: space-between; width: 100%;
+        max-width: 560px; font-size: 12px; color: var(--gray);
+    }
+    .cert-actions { display: flex; gap: 14px; }
+
+    @media print {
+        .navbar, .footer, .cert-actions, .flash-container { display: none !important; }
+        .cert-page { padding: 0; background: none; }
+        .certificate { box-shadow: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cert-page">
+    <div class="certificate" id="certificateCard">
+        <div class="badge"><i class="fa-solid fa-certificate"></i></div>
+        <div class="kicker">Certificate of Participation</div>
+        <h1>This certificate is proudly presented to</h1>
+        <div class="name">{{ registration.participant_name }}</div>
+        <p class="event-line">
+            for actively participating in <strong>{{ registration.event_title }}</strong>,
+            held on <strong>{{ registration.event_date.strftime('%d %B %Y') }}</strong>
+            at <strong>{{ registration.venue_name }}</strong>, organized through EventHub.
+        </p>
+        <div class="footer-row">
+            <span>Ticket ID: {{ registration.ticket_code }}</span>
+            <span>EventHub · Certified Digital Record</span>
+        </div>
+    </div>
+
+    <div class="cert-actions">
+        <a href="{{ url_for('participant.my_registrations') }}" class="btn btn-outline">
+            <i class="fa-solid fa-arrow-left"></i> My Tickets
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fa-solid fa-download"></i> Download / Print
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from('#certificateCard', { scale: 0.92, opacity: 0, duration: 0.8, ease: 'power3.out' });
+    }
+</script>
+{% endblock %}

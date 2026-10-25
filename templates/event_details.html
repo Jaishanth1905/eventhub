@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .details-page { max-width: 1100px; margin: 0 auto; padding: 110px 24px 80px; }
+    .details-hero {
+        border-radius: 22px; overflow: hidden; position: relative;
+        min-height: 300px; display: flex; align-items: flex-end;
+        background: linear-gradient(135deg, var(--primary), var(--dark-2));
+        margin-bottom: 36px;
+    }
+    .details-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .45; }
+    .details-hero-content { position: relative; padding: 40px; color: var(--white); z-index: 1; }
+    .details-cat {
+        display: inline-block; background: var(--secondary); color: var(--dark);
+        padding: 5px 16px; border-radius: 50px; font-size: 12px;
+        font-weight: 700; text-transform: uppercase; margin-bottom: 14px;
+    }
+    .details-hero-content h1 { font-size: clamp(28px, 4vw, 44px); margin-bottom: 10px; }
+    .details-hero-meta { display: flex; gap: 24px; flex-wrap: wrap; opacity: .92; font-size: 15px; }
+    .details-hero-meta span { display: flex; align-items: center; gap: 8px; }
+
+    .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+    @media (max-width: 860px) { .details-grid { grid-template-columns: 1fr; } }
+
+    .details-card {
+        background: var(--white); border-radius: var(--radius);
+        padding: 30px; box-shadow: var(--shadow); margin-bottom: 24px;
+    }
+    .details-card h2 { font-size: 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .details-card h2 i { color: var(--primary); }
+    .details-card p.desc { color: #44445a; line-height: 1.8; }
+
+    .session-item {
+        display: flex; gap: 18px; padding: 16px 0;
+        border-bottom: 1px solid #f0f0f8;
+    }
+    .session-item:last-child { border-bottom: none; }
+    .session-time {
+        min-width: 110px; text-align: center; background: rgba(108,92,231,.08);
+        border-radius: 12px; padding: 10px; height: fit-content;
+    }
+    .session-time strong { display: block; color: var(--primary); font-size: 15px; }
+    .session-time small { color: var(--gray); font-size: 12px; }
+    .session-info h4 { font-size: 16px; margin-bottom: 4px; }
+    .session-info p { color: var(--gray); font-size: 13px; }
+    .session-info p i { color: var(--accent); margin-right: 4px; }
+
+    /* Sidebar ticket card */
+    .ticket-card {
+        background: var(--white); border-radius: var(--radius);
+        padding: 30px; box-shadow: var(--shadow);
+        position: sticky; top: 100px;
+    }
+    .ticket-price { text-align: center; margin-bottom: 20px; }
+    .ticket-price .fee { font-size: 40px; font-weight: 800; color: var(--primary); }
+    .ticket-price .fee-label { color: var(--gray); font-size: 13px; }
+    .ticket-info { margin-bottom: 20px; }
+    .ticket-info div {
+        display: flex; justify-content: space-between; padding: 10px 0;
+        border-bottom: 1px dashed #e5e5f0; font-size: 14px;
+    }
+    .ticket-info div span:first-child { color: var(--gray); }
+    .ticket-info div span:last-child { font-weight: 700; }
+    .seats-bar { height: 8px; background: #eeeef8; border-radius: 20px; overflow: hidden; margin-bottom: 6px; }
+    .seats-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 20px; }
+    .seats-text { font-size: 12px; color: var(--gray); margin-bottom: 20px; }
+    .sold-out-btn {
+        background: #d5d5e8 !important; color: var(--gray) !important;
+        cursor: not-allowed !important; pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="details-page">
+
+    <!-- Hero Banner -->
+    <div class="details-hero">
+        {% if event.poster %}
+            <img src="{{ url_for('static', filename='uploads/' + event.poster) }}" alt="{{ event.title }}">
+        {% endif %}
+        <div class="details-hero-content">
+            <span class="details-cat">{{ event.category }}</span>
+            <h1>{{ event.title }}</h1>
+            <div class="details-hero-meta">
+                <span><i class="fa-solid fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y') }}</span>
+                <span><i class="fa-solid fa-clock"></i> {{ event.event_time.strftime('%I:%M %p') }}</span>
+                <span><i class="fa-solid fa-location-dot"></i> {{ event.venue_name }}</span>
+                <span><i class="fa-solid fa-user-tie"></i> {{ event.organizer_name }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="details-grid">
+        <!-- LEFT: Description + Schedule -->
+        <div>
+            <div class="details-card">
+                <h2><i class="fa-solid fa-align-left"></i> About This Event</h2>
+                <p class="desc">{{ event.description }}</p>
+            </div>
+
+            <div class="details-card">
+                <h2><i class="fa-solid fa-list-check"></i> Event Schedule</h2>
+                {% if sessions %}
+                    {% for s in sessions %}
+                    <div class="session-item">
+                        <div class="session-time">
+                            <strong>{{ s.start_time.strftime('%I:%M %p') }}</strong>
+                            <small>to {{ s.end_time.strftime('%I:%M %p') }}</small>
+                        </div>
+                        <div class="session-info">
+                            <h4>{{ s.session_name }}</h4>
+                            <p><i class="fa-solid fa-microphone"></i> {{ s.speaker }} &nbsp;·&nbsp;
+                               <i class="fa-solid fa-location-dot"></i> {{ s.venue }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--gray);">Detailed schedule will be announced soon.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Registration Card -->
+        <div>
+            <div class="ticket-card">
+                <div class="ticket-price">
+                    {% if event.fee > 0 %}
+                        <div class="fee">₹{{ event.fee }}</div>
+                        <div class="fee-label">per participant</div>
+                    {% else %}
+                        <div class="fee">FREE</div>
+                        <div class="fee-label">no entry fee</div>
+                    {% endif %}
+                </div>
+
+                <div class="ticket-info">
+                    <div><span>📅 Date</span><span>{{ event.event_date.strftime('%d %b %Y') }}</span></div>
+                    <div><span>🕐 Time</span><span>{{ event.event_time.strftime('%I:%M %p') }}</span></div>
+                    <div><span>📍 Venue</span><span>{{ event.venue_name }}</span></div>
+                    <div><span>👥 Capacity</span><span>{{ event.capacity }}</span></div>
+                    <div><span>⏳ Deadline</span><span>{{ event.deadline.strftime('%d %b %Y') }}</span></div>
+                </div>
+
+                <div class="seats-bar">
+                    <div class="seats-fill" style="width: {{ 0 if not event.capacity else (((event.capacity - (event.seats_left or 0)) / event.capacity) * 100) | round(0, method='floor') }}%;"></div>
+                </div>
+                <div class="seats-text">{{ event.seats_left }} of {{ event.capacity }} seats remaining</div>
+
+                {% if event.seats_left <= 0 %}
+                    <button class="btn btn-lg btn-block sold-out-btn">Sold Out 😢</button>
+                {% elif already_registered %}
+                    <button class="btn btn-lg btn-block sold-out-btn">✅ Already Registered</button>
+                {% elif not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg btn-block">
+                        Login to Register
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('main.register_event', event_id=event.id) }}"
+                       class="btn btn-primary btn-lg btn-block">
+                        <i class="fa-solid fa-ticket"></i> Register Now
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

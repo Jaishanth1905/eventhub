@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventHub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-logo">
+                <i class="fa-solid fa-ticket"></i> Event<span>Hub</span>
+            </a>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('main.events') }}">Events</a></li>
+
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'admin' %}
+                        <li><a href="{{ url_for('dashboards.admin_dashboard') }}">Dashboard</a></li>
+                    {% elif current_user.role == 'organizer' %}
+                        <li><a href="{{ url_for('dashboards.organizer_dashboard') }}">Dashboard</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('dashboards.participant_dashboard') }}">My Dashboard</a></li>
+                        <li><a href="{{ url_for('participant.my_registrations') }}">My Tickets</a></li>
+                    {% endif %}
+                    <li class="nav-user">
+                        <span class="nav-avatar">{{ current_user.name[0] | upper }}</span>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+                    </li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Get Started</a></li>
+                {% endif %}
+            </ul>
+
+            <button class="hamburger" id="hamburger">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= FLASH MESSAGES ================= -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <i class="fa-solid 
+                            {% if category == 'success' %}fa-circle-check
+                            {% elif category == 'danger' %}fa-circle-xmark
+                            {% elif category == 'warning' %}fa-triangle-exclamation
+                            {% else %}fa-circle-info{% endif %}"></i>
+                        {{ message }}
+                        <span class="flash-close" onclick="this.parentElement.remove()">&times;</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ================= PAGE CONTENT ================= -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3><i class="fa-solid fa-ticket"></i> EventHub</h3>
+                <p>Your one-stop platform for discovering, registering, and managing events seamlessly.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <a href="{{ url_for('main.index') }}">Home</a>
+                <a href="{{ url_for('main.events') }}">Events</a>
+                <a href="{{ url_for('auth.register') }}">Register</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <p><i class="fa-solid fa-envelope"></i> support@eventhub.com</p>
+                <p><i class="fa-solid fa-phone"></i> +91 98765 43210</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 EventHub. Built with ❤️ using Flask & MySQL.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('navMenu').classList.toggle('active');
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Auto-dismiss flash messages after 4 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.flash').forEach(f => {
+                f.style.opacity = '0';
+                setTimeout(() => f.remove(), 400);
+            });
+        }, 4000);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

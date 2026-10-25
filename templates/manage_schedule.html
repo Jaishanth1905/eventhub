@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Manage Schedule — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-page { max-width: 900px; margin: 0 auto; padding: 120px 24px 80px; }
+    .schedule-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .schedule-header h1 { margin: 0; color: var(--dark); }
+    .schedule-header p { color: var(--gray); margin-top: 0.3rem; }
+    .schedule-header a { border: 1px solid var(--light); border-radius: 10px; padding: 0.5rem 0.9rem; font-size: 0.85rem; color: var(--dark); text-decoration: none; }
+
+    .panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.25rem; }
+    .panel h2 { margin: 0 0 1rem; font-size: 1.1rem; color: var(--dark); }
+
+    .session-row {
+        display: flex; gap: 1rem; align-items: center; padding: 0.85rem 0;
+        border-bottom: 1px solid var(--light);
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-time {
+        min-width: 100px; text-align: center; background: rgba(108,92,231,.08);
+        border-radius: 10px; padding: 8px; font-size: 0.82rem; color: var(--primary); font-weight: 700;
+    }
+    .session-info { flex: 1; }
+    .session-info h4 { margin: 0 0 2px; font-size: 0.98rem; }
+    .session-info p { margin: 0; color: var(--gray); font-size: 0.82rem; }
+    .session-actions form { display: inline; }
+    .btn-danger-lite {
+        border: 1px solid rgba(214,48,49,.3); background: rgba(214,48,49,.08); color: var(--danger);
+        border-radius: 10px; padding: 0.4rem 0.7rem; font-size: 0.8rem; cursor: pointer;
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { font-weight: 600; font-size: 0.85rem; }
+    .form-group input {
+        border: 1px solid #d7dbe1; border-radius: 10px; padding: 0.65rem 0.8rem; font: inherit;
+    }
+    .empty { color: var(--gray); padding: 0.5rem 0; }
+
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedule-page">
+    <header class="schedule-header">
+        <div>
+            <h1><i class="fa-solid fa-list-check"></i> Manage Schedule</h1>
+            <p>{{ event.title if event else "Event" }}{% if event and event.start_datetime %} · {{ event.start_datetime.strftime('%d %b %Y') }}{% endif %}</p>
+        </div>
+        {% if event %}
+        <a href="{{ url_for('organizer_bp.edit_event', event_id=event.id) }}"><i class="fa-solid fa-arrow-left"></i> Back to Event</a>
+        {% endif %}
+    </header>
+
+    <section class="panel">
+        <h2><i class="fa-solid fa-clock"></i> Sessions</h2>
+        {% if sessions %}
+            {% for s in sessions %}
+            <div class="session-row">
+                <div class="session-time">{{ s.start_time }}<br><small>to {{ s.end_time }}</small></div>
+                <div class="session-info">
+                    <h4>{{ s.session_name }}</h4>
+                    <p><i class="fa-solid fa-microphone"></i> {{ s.speaker or "TBD" }} ·
+                       <i class="fa-solid fa-calendar"></i> {{ s.session_date }} ·
+                       <i class="fa-solid fa-location-dot"></i> {{ s.venue or "TBD" }}</p>
+                </div>
+                <div class="session-actions">
+                    <form method="POST" action="{{ url_for('organizer_bp.delete_session', event_id=event.id, session_id=s.id) }}"
+                          onsubmit="return confirm('Remove this session?');">
+                        <button type="submit" class="btn-danger-lite"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty">No sessions added yet. Add your first one below.</p>
+        {% endif %}
+    </section>
+
+    {% if event %}
+    <section class="panel">
+        <h2><i class="fa-solid fa-plus"></i> Add Session</h2>
+        <form method="POST" action="{{ url_for('organizer_bp.manage_schedule', event_id=event.id) }}">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Session Name</label>
+                    <input type="text" name="session_name" required placeholder="e.g. Opening Keynote">
+                </div>
+                <div class="form-group">
+                    <label>Speaker</label>
+                    <input type="text" name="speaker" placeholder="Speaker name">
+                </div>
+                <div class="form-group">
+                    <label>Venue</label>
+                    <input type="text" name="venue" placeholder="Room / Hall">
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="session_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Start Time</label>
+                    <input type="time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="time" name="end_time" required>
+                </div>
+            </div>
+            <div style="margin-top:1rem;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Session</button>
+            </div>
+        </form>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (typeof gsap !== "undefined") {
+        gsap.from(".panel", { y: 20, opacity: 0, duration: 0.55, stagger: 0.1, ease: "power2.out" });
+    }
+</script>
+{% endblock %}

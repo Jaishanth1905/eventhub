@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Browse Events — EventHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .events-page { max-width: 1200px; margin: 0 auto; padding: 120px 24px 80px; }
+    .events-header { text-align: center; margin-bottom: 36px; }
+    .events-header h1 { font-size: 38px; font-weight: 800; }
+    .events-header p { color: var(--gray); margin-top: 6px; }
+
+    /* Search & Filters */
+    .filter-bar {
+        display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+        margin-bottom: 40px;
+    }
+    .search-box { position: relative; flex: 1; min-width: 260px; max-width: 440px; }
+    .search-box i {
+        position: absolute; left: 18px; top: 50%;
+        transform: translateY(-50%); color: var(--gray);
+    }
+    .search-box input {
+        width: 100%; padding: 14px 18px 14px 48px;
+        border: 2px solid #e5e5f0; border-radius: 50px;
+        font-size: 15px; background: var(--white); transition: var(--transition);
+    }
+    .search-box input:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(108,92,231,.12);
+    }
+    .filter-select {
+        padding: 14px 20px; border: 2px solid #e5e5f0; border-radius: 50px;
+        font-size: 14px; background: var(--white); cursor: pointer;
+        font-weight: 600; color: var(--dark);
+    }
+    .category-chips {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+        margin-bottom: 40px;
+    }
+    .chip {
+        padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600;
+        background: var(--white); border: 2px solid #e5e5f0;
+        cursor: pointer; transition: var(--transition);
+    }
+    .chip:hover, .chip.active {
+        background: var(--primary); color: var(--white); border-color: var(--primary);
+    }
+
+    /* Event Cards */
+    .events-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 28px;
+    }
+    .event-card {
+        background: var(--white); border-radius: var(--radius);
+        overflow: hidden; box-shadow: var(--shadow); transition: var(--transition);
+        display: flex; flex-direction: column;
+    }
+    .event-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(108,92,231,.22); }
+    .event-poster {
+        height: 180px; position: relative;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        display: flex; align-items: center; justify-content: center;
+    }
+    .event-poster i { font-size: 54px; color: rgba(255,255,255,.85); }
+    .event-date-badge {
+        position: absolute; top: 14px; left: 14px;
+        background: var(--white); border-radius: 12px; text-align: center;
+        padding: 8px 14px; box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .event-date-badge .day { font-size: 20px; font-weight: 800; color: var(--primary); display: block; }
+    .event-date-badge .month { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--gray); }
+    .event-fee {
+        position: absolute; top: 14px; right: 14px;
+        background: rgba(15,15,26,.75); backdrop-filter: blur(6px);
+        color: var(--white); padding: 6px 14px; border-radius: 50px;
+        font-size: 13px; font-weight: 700;
+    }
+    .event-body { padding: 22px; flex: 1; display: flex; flex-direction: column; }
+    .event-cat {
+        display: inline-block; font-size: 11px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .5px;
+        color: var(--primary); background: rgba(108,92,231,.1);
+        padding: 4px 12px; border-radius: 50px; margin-bottom: 10px;
+        width: fit-content;
+    }
+    .event-body h3 { font-size: 19px; margin-bottom: 8px; }
+    .event-meta { color: var(--gray); font-size: 13px; margin-bottom: 14px; }
+    .event-meta span { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .event-spots { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+    .spots-ok { color: var(--success); }
+    .spots-low { color: var(--danger); }
+    .event-body .btn { margin-top: auto; justify-content: center; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 80px 20px; }
+    .empty-state i { font-size: 70px; color: #d5d5e8; margin-bottom: 18px; }
+    .empty-state h3 { font-size: 22px; margin-bottom: 8px; }
+    .empty-state p { color: var(--gray); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="events-page">
+
+    <div class="events-header">
+        <h1>Explore <span class="gradient-text">Events</span> 🎪</h1>
+        <p>Find workshops, hackathons, concerts & more</p>
+    </div>
+
+    <!-- Search & Filters -->
+    <form method="GET" action="{{ url_for('main.events') }}" class="filter-bar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="q" value="{{ request.args.get('q', '') }}"
+                   placeholder="Search events...">
+        </div>
+        <select name="category" class="filter-select">
+            <option value="">All Categories</option>
+            <option value="Workshop"  {% if request.args.get('category') == 'Workshop' %}selected{% endif %}>Workshop</option>
+            <option value="Hackathon" {% if request.args.get('category') == 'Hackathon' %}selected{% endif %}>Hackathon</option>
+            <option value="Seminar"   {% if request.args.get('category') == 'Seminar' %}selected{% endif %}>Seminar</option>
+            <option value="Cultural"  {% if request.args.get('category') == 'Cultural' %}selected{% endif %}>Cultural</option>
+            <option value="Sports"    {% if request.args.get('category') == 'Sports' %}selected{% endif %}>Sports</option>
+        </select>
+        <select name="sort" class="filter-select">
+            <option value="date" {% if request.args.get('sort') == 'date' %}selected{% endif %}>Sort: Date</option>
+            <option value="fee_low" {% if request.args.get('sort') == 'fee_low' %}selected{% endif %}>Fee: Low → High</option>
+            <option value="fee_high" {% if request.args.get('sort') == 'fee_high' %}selected{% endif %}>Fee: High → Low</option>
+        </select>
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+    </form>
+
+    <!-- Event Cards -->
+    <div class="events-grid" id="eventsGrid">
+        {% if events %}
+            {% for event in events %}
+            <div class="event-card">
+                <div class="event-poster">
+                    {% if event.poster %}
+                        <img src="{{ url_for('static', filename='uploads/' + event.poster) }}"
+                             alt="{{ event.title }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                        <i class="fa-solid fa-calendar-star"></i>
+                    {% endif %}
+                    <div class="event-date-badge">
+                        <span class="day">{{ event.event_date.strftime('%d') }}</span>
+                        <span class="month">{{ event.event_date.strftime('%b') }}</span>
+                    </div>
+                    <div class="event-fee">
+                        {% if event.fee > 0 %}₹{{ event.fee }}{% else %}FREE{% endif %}
+                    </div>
+                </div>
+                <div class="event-body">
+                    <span class="event-cat">{{ event.category }}</span>
+                    <h3>{{ event.title }}</h3>
+                    <div class="event-meta">
+                        <span><i class="fa-solid fa-location-dot"></i> {{ event.venue_name }}</span>
+                        <span><i class="fa-solid fa-clock"></i> {{ event.event_time.strftime('%I:%M %p') }}</span>
+                        <span><i class="fa-solid fa-user-tie"></i> by {{ event.organizer_name }}</span>
+                    </div>
+                    <div class="event-spots">
+                        {% if event.seats_left > 10 %}
+                            <span class="spots-ok"><i class="fa-solid fa-circle-check"></i> {{ event.seats_left }} spots left</span>
+                        {% elif event.seats_left > 0 %}
+                            <span class="spots-low"><i class="fa-solid fa-fire"></i> Only {{ event.seats_left }} spots left!</span>
+                        {% else %}
+                            <span class="spots-low"><i class="fa-solid fa-circle-xmark"></i> Sold Out</span>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('main.event_details', event_id=event.id) }}" class="btn btn-outline btn-sm">
+                        View Details <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <i class="fa-solid fa-calendar-xmark"></i>
+                <h3>No events found 😕</h3>
+                <p>Try a different search term or check back soon!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // NOTE: the event-card entrance animation was removed entirely.
+    // With 9 staggered cards, a screenshot or quick glance taken within
+    // the first ~1s of page load would catch later cards still at low
+    // opacity, which repeatedly looked like "the events aren't loading"
+    // even though the data was always there. Cards now render instantly
+    // at full opacity — only the header/filter bar still animate in.
+    gsap.from('.events-header', { y: 20, opacity: 0, duration: 0.4, ease: 'power2.out' });
+    gsap.from('.filter-bar',   { y: 20, opacity: 0, duration: 0.4, delay: 0.05, ease: 'power2.out' });
+</script>
+{% endblock %}
