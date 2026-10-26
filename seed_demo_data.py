@@ -34,7 +34,7 @@ def get_or_create_organizer():
                 "Dhrona",
                 "dhrona@gmail.com",
                 "1234567890",
-                generate_password_hash("123456"),
+                generate_password_hash("123456", method="pbkdf2:sha256"),
             ),
         )
         conn.commit()

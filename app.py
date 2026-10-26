@@ -68,7 +68,7 @@ def seed_admin():
                 "Administrator",
                 Config.ADMIN_EMAIL,
                 "0000000000",
-                generate_password_hash(Config.ADMIN_PASSWORD),
+                generate_password_hash(Config.ADMIN_PASSWORD, method="pbkdf2:sha256"),
             ),
         )
         mysql.connection.commit()
@@ -131,12 +131,14 @@ def create_app():
     from participant import participant_bp
     from admin import admin_bp
     from dashboards import dashboards_bp
+    from ticket_portal import ticket_portal_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(participant_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(dashboards_bp)
+    app.register_blueprint(ticket_portal_bp)
     app.register_blueprint(organizer_bp, url_prefix="/organizer")
 
     register_error_handlers(app)
@@ -150,4 +152,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    app.run(debug=True, port=int(os.getenv("PORT", "5001")))

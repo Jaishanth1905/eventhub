@@ -86,7 +86,7 @@ def register():
         user_id = insert(
             """INSERT INTO users (name, email, phone, password_hash, role)
                VALUES (%s, %s, %s, %s, %s)""",
-            (name, email, phone, generate_password_hash(password), role),
+            (name, email, phone, generate_password_hash(password, method="pbkdf2:sha256"), role),
         )
 
         # Auto-login after registration
