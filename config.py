@@ -10,8 +10,11 @@ class Config:
     # MySQL
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_USER = os.getenv("MYSQL_USER", "root")
-    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "7755")
     MYSQL_DB = os.getenv("MYSQL_DB", "eventhub")
+
+    # Set this to the computer's LAN address (or public domain) for phone QR links.
+    PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
 
     # Uploads
     UPLOAD_FOLDER = os.path.join("static", "uploads")

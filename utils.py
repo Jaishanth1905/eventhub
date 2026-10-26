@@ -1,10 +1,12 @@
 import os
+import ipaddress
 import secrets
 import time as time_module
 from datetime import time
+from urllib.parse import urlsplit
  
 import qrcode
-from flask import current_app
+from flask import current_app, has_request_context
  
  
 def generate_ticket_code():
@@ -13,11 +15,34 @@ def generate_ticket_code():
  
  
 def public_ticket_url(ticket_code):
-    """URL a phone opens after scanning the ticket QR. Set PUBLIC_BASE_URL in
-    .env (e.g. http://192.168.1.5:5000) so phones on your Wi-Fi can reach it."""
+    """URL a phone opens after scanning the ticket QR."""
     from flask import request
-    base = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/") or request.host_url.rstrip("/")
-    return f"{base}/t/{ticket_code}"
+
+    fallback = request.host_url if has_request_context() else None
+    return f"{get_public_base_url(fallback)}/t/{ticket_code}"
+
+
+def get_public_base_url(fallback=None):
+    """Return a configured phone-reachable URL, rejecting loopback addresses."""
+    base = current_app.config["PUBLIC_BASE_URL"] or (fallback or "").strip().rstrip("/")
+    parsed = urlsplit(base)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError(
+            "Set PUBLIC_BASE_URL to the app's phone-reachable URL, "
+            "for example http://192.168.1.10:5001."
+        )
+
+    hostname = parsed.hostname.lower()
+    try:
+        is_loopback = ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        is_loopback = hostname == "localhost" or hostname.endswith(".localhost")
+    if is_loopback:
+        raise ValueError(
+            "The QR URL points to this device only. Set PUBLIC_BASE_URL in .env "
+            "to the computer's LAN IP, for example http://192.168.1.10:5001."
+        )
+    return base
  
  
 def generate_qr_image(data, name=None):
